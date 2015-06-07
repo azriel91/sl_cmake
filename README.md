@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/azriel91/sl_cmake.svg?branch=master)](https://travis-ci.org/azriel91/sl_cmake) [![Build Status](https://webapi.biicode.com/v1/badges/azriel/azriel/sl_cmake/master)](https://www.biicode.com/azriel/sl_cmake)
+
 ## CMake Functions To Develop CppMicroServices Modules with Biicode
 
 You can include this file in your CmakeLists.txt file for your biicode project:
