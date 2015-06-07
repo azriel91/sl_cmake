@@ -1,0 +1,57 @@
+before_install:
+  # Don't build if the last commit was from travis
+- export TRAVIS_COMMIT_MSG="$(git log --format=%B --no-merges -n 1)"
+- if [[ "$TRAVIS_COMMIT_MSG" = "$COMMIT_IGNORE_BUILD" ]]; then exit 0 ; fi
+
+  # Configure git
+- git config --global user.email "$USER_EMAIL"
+- git config --global user.name "$USER_NAME"
+- git config --global push.default simple
+- git checkout $TRAVIS_BRANCH
+
+install:
+- sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+- sudo apt-get update -qq
+
+  # Install Biicode
+- wget -O bii-ubuntu64.deb http://www.biicode.com/downloads/latest/ubuntu64
+- "(sudo dpkg -i bii-ubuntu64.deb) && sudo apt-get -f install"
+- bii --version
+- rm bii-ubuntu64.deb
+
+  # Install CMake
+- wget https://s3.amazonaws.com/biibinaries/thirdparty/cmake-3.0.2-Linux-64.tar.gz
+- tar -xzf cmake-3.0.2-Linux-64.tar.gz
+- sudo cp -fR cmake-3.0.2-Linux-64/* /usr
+- rm -rf cmake-3.0.2-Linux-64
+- rm cmake-3.0.2-Linux-64.tar.gz
+
+script:
+- bii init -l
+
+after_success:
+  # Publish block
+- bii user $USER -p $BII_PASSWORD
+- bii --version
+- if [[ -n $TRAVIS_TAG ]]; then bii publish -r --tag STABLE --versiontag $TRAVIS_TAG; fi
+- if [[ -z $TRAVIS_TAG ]]; then bii publish -r; fi
+
+  # If there are changes, commit them
+- git config credential.helper "store --file=.git/credentials" 
+- echo "https://${GITHUB_TOKEN}:@github.com" > .git/credentials
+- git add -A .
+- git commit -m "$COMMIT_IGNORE_BUILD" 
+- git remote -v
+- git remote set-url origin https://github.com/$TRAVIS_REPO_SLUG.git 
+- git push
+
+env:
+  global:
+  - USER_EMAIL=azriel91@gmail.com
+  - USER_NAME="azriel"
+  - COMMIT_IGNORE_BUILD="Promoted version. ***travis***"
+  - USER=azriel
+  # BII_PASSWORD
+  - secure: "qI9icNvac64FAelL5b0rbKQUoALlRwMbP7Mqv/qPGvTpVrXYEqzhJP9cSFDQ5hnrk/00KXAFOReChnTS0XKeFlRcbdE3iNjYtMXP0WJMs9c6jfsXHs14vZBfuNuccKGqAJMGfg8Zpk2EKI9+Gb65A2tyiGEq27rOypcQld+qqPjUQu85BvS74bmGg2n7Vi7CMt15XBWhORUVhKyG9Gdtu/dxigp3vx8Or87fYg9PawzfmQqadpRqT1Gjlni4zwtsEyPMR/T88qz3/S2TbJHbkmSSC6Q+osI2A69TsFJNjusIxS8rYWDuMU615a+XnfSiYW6B7fx7Qh6UniOmzr+PYy7X5Xr2mLta5eeSyTTMpLb+g+fVTEpLFsMR7WxK6rANvMysScOLK1tZRifBJpZIVDAk9m5Y0v5pItyRWg2hPJFS6crJxk5XGwU6iAjHgh0T7OoymStwYiZ6VO5UoaTDqXqwgSoyVVaHeqY45FTo4RwI2AYUHJR1LHcSsuoe4Sn/he6AB0jS+iCs3xj+SMjT2TGpAGANJZgrmlD40ng8Q2QZV57xzuheWo7jnfY7DruLrqv2A56L4BfBFPvQUP/TCMMCJWkUR881rM8VryYwGSV//qkKC9zgaeWbqltiDwFbTqLkFhAd5ys0l3cNWrOGcVYXyPfA4jh1ynx2XQU4KGo="
+  # GITHUB_TOKEN
+  - secure: frR/+26mnj9huz8aEY+Z8djcoEyi0a+0u5QylGOagY9wvk64WGyRMykoPCHADa4nBA5ymNt+xBmcFCZkNY/TBPWGaB23aIbGoXWDE0tvqAnToTcm+rWlLdfj3akLhmZBRc8rGm+QJbuoVw/KCfbxR5xzlz0UuDCA2CY3dy4UwkI=
