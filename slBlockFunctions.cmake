@@ -69,11 +69,6 @@ function(SL_GENERATE_AND_LINK_BLOCK_HEADER )
     string(CONCAT BLOCK_NAMESPACE_DECLARATION "${BLOCK_NAMESPACE_DECLARATION}" "}\n")
   endforeach()
 
-  # Generate the namespace ns = s1::s2::s3...; nested namespace declaration
-  string(REGEX REPLACE "_" "::" BLOCK_NAMESPACE_NESTED ${BII_BLOCK_NAME})
-  string(CONCAT BLOCK_NAMESPACE_DECLARATION "${BLOCK_NAMESPACE_DECLARATION}\n"
-                                            "namespace ns = ${BLOCK_NAMESPACE_NESTED};")
-
   # Generate the header file
   configure_file(${SL_BLOCK_FUNCTIONS_DIR}/Block.h.in
                  ${CMAKE_CURRENT_BINARY_DIR}/${BII_BLOCK_NAME}/Block.h)
