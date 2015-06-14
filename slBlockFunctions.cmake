@@ -76,9 +76,9 @@ function(SL_GENERATE_AND_LINK_BLOCK_HEADER )
 
   # Generate the header file
   configure_file(${SL_BLOCK_FUNCTIONS_DIR}/Block.h.in
-                 ${CMAKE_CURRENT_BINARY_DIR}/Block.h)
+                 ${CMAKE_CURRENT_BINARY_DIR}/${BII_BLOCK_NAME}/Block.h)
   set(SL_BLOCK_HEADER_TARGET "${BII_BLOCK_NAME}_BLOCK_HEADER")
-  add_custom_target(${SL_BLOCK_HEADER_TARGET} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Block.h)
+  add_custom_target(${SL_BLOCK_HEADER_TARGET} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${BII_BLOCK_NAME}/Block.h)
 
   # Add the block header target as a dependency of the bii block target
   add_dependencies(${BII_LIB_TARGET} ${SL_BLOCK_HEADER_TARGET})
