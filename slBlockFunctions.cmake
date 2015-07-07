@@ -9,13 +9,24 @@ set(SL_BLOCK_FUNCTIONS_DIR ${CMAKE_CURRENT_LIST_DIR})
 #
 #======================================================================================================================#
 function(ADAPT_TARGETS_FOR_CPPMICROSERVICES )
-  SL_GENERATE_AND_LINK_BLOCK_HEADER()
+  set(macro_args ${ARGN})
+  list(LENGTH macro_args arg_count)
 
-  set_property(TARGET ${BII_LIB_TARGET} APPEND PROPERTY COMPILE_DEFINITIONS US_MODULE_NAME=${PROJECT_NAME})
+  set(target_name )
+  if (${arg_count} EQUAL 0)
+    set(target_name ${BII_LIB_TARGET})
+  else()
+    list(GET macro_args 0 target_name)
+  endif()
+  message("Generating Block header and linking to target: ${target_name}")
+
+  SL_GENERATE_AND_LINK_BLOCK_HEADER(${target_name})
+
+  set_property(TARGET ${target_name} APPEND PROPERTY COMPILE_DEFINITIONS US_MODULE_NAME=${BII_BLOCK_NAME})
 
   # Indicate this is a static module if we aren't building shared libraries
   if(NOT BUILD_SHARED_LIBS)
-    target_compile_definitions(${BII_LIB_TARGET} PRIVATE US_STATIC_MODULE)
+    target_compile_definitions(${target_name} PRIVATE US_STATIC_MODULE)
   endif()
 endfunction()
 
@@ -46,7 +57,7 @@ endfunction()
 #======================================================================================================================#
 # [PRIVATE/INTERNAL]
 #
-# SL_GENERATE_AND_LINK_BLOCK_HEADER()
+# SL_GENERATE_AND_LINK_BLOCK_HEADER(target_name)
 #
 # Generates a "Block.h" header file that contains the c++ library export definition and sets 'ns' as an alias for the
 # block namespace.
@@ -56,7 +67,7 @@ endfunction()
 # - the block namespace is sl::core::application
 #
 #======================================================================================================================#
-function(SL_GENERATE_AND_LINK_BLOCK_HEADER )
+function(SL_GENERATE_AND_LINK_BLOCK_HEADER target_name)
   string(TOUPPER ${BII_BLOCK_NAME} BII_BLOCK_NAME_UPPER) # used in Block.h.in
   string(REGEX MATCHALL "([^_]+)+" BII_BLOCK_NAME_SEGMENTS ${BII_BLOCK_NAME})
 
@@ -75,7 +86,7 @@ function(SL_GENERATE_AND_LINK_BLOCK_HEADER )
   set(SL_BLOCK_HEADER_TARGET "${BII_BLOCK_NAME}_BLOCK_HEADER")
   add_custom_target(${SL_BLOCK_HEADER_TARGET} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${BII_BLOCK_NAME}/Block.h)
 
-  # Add the block header target as a dependency of the bii block target
-  add_dependencies(${BII_LIB_TARGET} ${SL_BLOCK_HEADER_TARGET})
-  target_include_directories(${BII_LIB_TARGET} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+  # Add the block header target as a dependency of the specified target
+  add_dependencies(${target_name} ${SL_BLOCK_HEADER_TARGET})
+  target_include_directories(${target_name} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 endfunction()
