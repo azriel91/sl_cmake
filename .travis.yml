@@ -17,7 +17,9 @@ script:
 after_success:
   # Publish block
 - bii user $USER -p $BII_PASSWORD
-- bii --version
+- git status
+- git add .
+- git diff --cached
 - if [[ -n $TRAVIS_TAG ]]; then bii publish -r --tag STABLE --versiontag $TRAVIS_TAG; fi
 - if [[ -z $TRAVIS_TAG ]]; then bii publish -r; fi
 
