@@ -3,26 +3,9 @@ sudo: required
 before_install:
 - git checkout $TRAVIS_BRANCH
 
-- if [ $(bii-support/travis/git/is_last_commit_travis.sh) = "true" ] ; then exit 0 ; fi
-- bii-support/travis/git/configure.sh
-
-install:
-- bii-support/travis/install/apt_update.sh
-- bii-support/travis/install/biicode.sh
-- bii-support/travis/install/cmake.sh
-
-script:
-- bii init -l
-
-after_success:
-- bii-support/travis/publish/biicode.sh
-
 env:
   global:
   - USER_EMAIL=azriel91@gmail.com
   - USER_NAME="azriel"
-  - BII_USER=azriel
-  # BII_PASSWORD
-  - secure: "qI9icNvac64FAelL5b0rbKQUoALlRwMbP7Mqv/qPGvTpVrXYEqzhJP9cSFDQ5hnrk/00KXAFOReChnTS0XKeFlRcbdE3iNjYtMXP0WJMs9c6jfsXHs14vZBfuNuccKGqAJMGfg8Zpk2EKI9+Gb65A2tyiGEq27rOypcQld+qqPjUQu85BvS74bmGg2n7Vi7CMt15XBWhORUVhKyG9Gdtu/dxigp3vx8Or87fYg9PawzfmQqadpRqT1Gjlni4zwtsEyPMR/T88qz3/S2TbJHbkmSSC6Q+osI2A69TsFJNjusIxS8rYWDuMU615a+XnfSiYW6B7fx7Qh6UniOmzr+PYy7X5Xr2mLta5eeSyTTMpLb+g+fVTEpLFsMR7WxK6rANvMysScOLK1tZRifBJpZIVDAk9m5Y0v5pItyRWg2hPJFS6crJxk5XGwU6iAjHgh0T7OoymStwYiZ6VO5UoaTDqXqwgSoyVVaHeqY45FTo4RwI2AYUHJR1LHcSsuoe4Sn/he6AB0jS+iCs3xj+SMjT2TGpAGANJZgrmlD40ng8Q2QZV57xzuheWo7jnfY7DruLrqv2A56L4BfBFPvQUP/TCMMCJWkUR881rM8VryYwGSV//qkKC9zgaeWbqltiDwFbTqLkFhAd5ys0l3cNWrOGcVYXyPfA4jh1ynx2XQU4KGo="
   # GITHUB_TOKEN
   - secure: "itp+3LkvSipkqFySYOKhp+iiORTsr2W4/M8DDoyGLUdLMtGuSfWhjCdTcVYFMXBd5S0kB2YmZGpxBED1cNJ2bZwgQ33NamBs5ikeRIIInJSa64G/ArVqiIsY2sa5/tQyJwRYLykU+Xc87B0JO/VJtnMZvcscBWqyw+IAfbV9wDex+rZwiuCePTTUTRTJgZWZEKPR7NN1ZypQWbFCYp6x57MSeEeTzJVL7RnwNaJj+zh9Q9yYo/vz/bxjYgJ2rG1D9asV15tYlDSxKedM7jnjCrtiJmdb8BpZV3mwqwLpH6gk2ekCRW6R8SnyAIr4RSaojmvCyORk2zZrfcWmNDYrQXTJxgj7h9g8XcclZSF7koVQMkMslMBkG5D7lBKMPFYuzk6tQLb5aQmj0Lhr6d/yAj/KFKw8hI5J642HG/2QmADTxvZPQmmwo0F++Bs3HjAjizfRLFo5H8BQFhYqkxM4L5PS9ZfjpdA8fT57A1HbROWZS8H8q+opptpFzq30jhTTjLF2Os3nXaEBU9Md/Ed8JIkJUmEv+xOmny6smzutHLSfpVrcv0iKUtgaYhSLyzn2KnQoWPOZRiprZERxZYuXvt+iPMNAe+2RDTQppW4wtIfMgNm9mWm3xY/VOkL/iGYTTg5GA0FCm57XIzUtgqffhxNuIp6vPg85ChH4e+Hy+qg="
