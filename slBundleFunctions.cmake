@@ -1,14 +1,15 @@
-set(SL_BLOCK_FUNCTIONS_DIR ${CMAKE_CURRENT_LIST_DIR})
+set(SL_BUNDLE_FUNCTIONS_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 #======================================================================================================================#
 # [PUBLIC/USER]
 #
-# adapt_targets_for_cppmicroservices()
+# adapt_for_cppmicroservices()
+# adapt_for_cppmicroservices(target_name)
 #
-# Adapt a block to a CppMicroServices module. This handles building the block as both static and shared libraries.
+# Adapt a bundle to a CppMicroServices module. This handles building the bundle as both static and shared libraries.
 #
 #======================================================================================================================#
-function(ADAPT_TARGETS_FOR_CPPMICROSERVICES )
+function(ADAPT_FOR_CPPMICROSERVICES )
   set(macro_args ${ARGN})
   list(LENGTH macro_args arg_count)
 
@@ -18,9 +19,9 @@ function(ADAPT_TARGETS_FOR_CPPMICROSERVICES )
   else()
     list(GET macro_args 0 target_name)
   endif()
-  message("Generating Block header and linking to target: ${target_name}")
+  message("Generating Bundle header and linking to target: ${target_name}")
 
-  sl_generate_and_link_block_header(${target_name})
+  sl_generate_and_link_bundle_header(${target_name})
 
   set_property(TARGET ${target_name} APPEND PROPERTY COMPILE_DEFINITIONS US_MODULE_NAME=${PROJECT_NAME})
 
@@ -57,35 +58,35 @@ endfunction()
 #======================================================================================================================#
 # [PRIVATE/INTERNAL]
 #
-# sl_generate_and_link_block_header(target_name)
+# sl_generate_and_link_bundle_header(target_name)
 #
-# Generates a "Block.h" header file that contains the c++ library export definition.
+# Generates a "Bundle.h" header file that contains the c++ library export definition.
 #
-# For example, for a block called sl_core_application:
+# For example, for a bundle called sl_core_application:
 # - the export macro is SL_CORE_APPLICATION_EXPORT
-# - the block namespace is sl::core::application
+# - the bundle namespace is sl::core::application
 #
 #======================================================================================================================#
-function(SL_GENERATE_AND_LINK_BLOCK_HEADER target_name)
-  string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UPPER) # used in Block.h.in
+function(SL_GENERATE_AND_LINK_BUNDLE_HEADER target_name)
+  string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UPPER) # used in Bundle.h.in
   string(REGEX MATCHALL "([^_]+)+" PROJECT_NAME_SEGMENTS ${PROJECT_NAME})
 
   # Generate the namespace <segment> {} declarations
-  set(BLOCK_NAMESPACE_DECLARATION "")
+  set(BUNDLE_NAMESPACE_DECLARATION "")
   foreach(SEGMENT ${PROJECT_NAME_SEGMENTS})
-    string(CONCAT BLOCK_NAMESPACE_DECLARATION "${BLOCK_NAMESPACE_DECLARATION}" "namespace ${SEGMENT} {\n")
+    string(CONCAT BUNDLE_NAMESPACE_DECLARATION "${BUNDLE_NAMESPACE_DECLARATION}" "namespace ${SEGMENT} {\n")
   endforeach()
   foreach(SEGMENT ${PROJECT_NAME_SEGMENTS})
-    string(CONCAT BLOCK_NAMESPACE_DECLARATION "${BLOCK_NAMESPACE_DECLARATION}" "}\n")
+    string(CONCAT BUNDLE_NAMESPACE_DECLARATION "${BUNDLE_NAMESPACE_DECLARATION}" "}\n")
   endforeach()
 
   # Generate the header file
-  configure_file(${SL_BLOCK_FUNCTIONS_DIR}/Block.h.in
-                 ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/Block.h)
-  set(SL_BLOCK_HEADER_TARGET "${PROJECT_NAME}_BLOCK_HEADER")
-  add_custom_target(${SL_BLOCK_HEADER_TARGET} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/Block.h)
+  configure_file(${SL_BUNDLE_FUNCTIONS_DIR}/Bundle.h.in
+                 ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/Bundle.h)
+  set(SL_BUNDLE_HEADER_TARGET "${PROJECT_NAME}_BUNDLE_HEADER")
+  add_custom_target(${SL_BUNDLE_HEADER_TARGET} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/Bundle.h)
 
-  # Add the block header target as a dependency of the specified target
-  add_dependencies(${target_name} ${SL_BLOCK_HEADER_TARGET})
+  # Add the bundle header target as a dependency of the specified target
+  add_dependencies(${target_name} ${SL_BUNDLE_HEADER_TARGET})
   target_include_directories(${target_name} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 endfunction()
