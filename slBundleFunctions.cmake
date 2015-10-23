@@ -23,11 +23,11 @@ function(ADAPT_FOR_CPPMICROSERVICES )
 
   sl_generate_and_link_bundle_header(${target_name})
 
-  set_property(TARGET ${target_name} APPEND PROPERTY COMPILE_DEFINITIONS US_MODULE_NAME=${PROJECT_NAME})
+  set_property(TARGET ${target_name} APPEND PROPERTY COMPILE_DEFINITIONS US_BUNDLE_NAME=${PROJECT_NAME})
 
   # Indicate this is a static module if we aren't building shared libraries
   if(NOT BUILD_SHARED_LIBS)
-    target_compile_definitions(${target_name} PRIVATE US_STATIC_MODULE)
+    target_compile_definitions(${target_name} PRIVATE US_STATIC_BUNDLE)
   endif()
 endfunction()
 
