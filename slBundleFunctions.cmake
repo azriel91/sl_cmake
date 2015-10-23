@@ -1,29 +1,92 @@
 set(SL_BUNDLE_FUNCTIONS_DIR ${CMAKE_CURRENT_LIST_DIR})
 
+# === Dependency discovery === #
+
+# Detect conan_cmake directory based on a file we expect to exist
+find_path(conan_cmake_DIR "conanTools.cmake" PATHS ${CONAN_INCLUDE_DIRS})
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${conan_cmake_DIR})
+include(conanTools)
+
+# Detect CppMicroServices directory based on a file we expect to exist
+find_path(CppMicroServices_CONAN_DIR "CppMicroServicesConfig.cmake" PATHS ${CONAN_INCLUDE_DIRS})
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CppMicroServices_CONAN_DIR})
+find_package(CppMicroServices 2.99.0 CONFIG)
+
 #======================================================================================================================#
 # [PUBLIC/USER]
 #
-# adapt_for_cppmicroservices()
-# adapt_for_cppmicroservices(target_name)
+# Minimum signature:
+# sl_create_bundle(my_target
+#                  SOURCES MyService.cpp Activator.cpp
+#                  RESOURCES manifest.json)
 #
-# Adapt a bundle to a CppMicroServices module. This handles building the bundle as both static and shared libraries.
+# Full signature example:
+# sl_create_bundle(my_target
+#                  LIBRARY
+#                  BUNDLE_NAME my_target
+#                  SOURCES MyService.cpp Activator.cpp
+#                  RESOURCES manifest.json
+#                  BINARY_RESOURCES generated.txt
+#                  ZIP_ARCHIVES ${static_bundle_deps}
+#                  COMPRESSION_LEVEL 9)
+#
+# Calls usFunctionGenerateBundleInit and usFunctionGetResourceSource.
+# Sets the compile definitions to identify the target(s) as CppMicroServices bundles.
+# Sets the c++11 flag for the compiler.
 #
 #======================================================================================================================#
-function(ADAPT_FOR_CPPMICROSERVICES )
-  set(macro_args ${ARGN})
-  list(LENGTH macro_args arg_count)
+function(SL_CREATE_BUNDLE target_name)
+  cmake_parse_arguments(BUNDLE "LIBRARY;EXECUTABLE"
+                               "BUNDLE_NAME;SOURCES"
+                               "RESOURCES;BINARY_RESOURCES;ZIP_ARCHIVES;COMPRESSION_LEVEL"
+                               ${ARGN})
 
-  set(target_name )
-  if (${arg_count} EQUAL 0)
-    set(target_name ${PROJECT_NAME})
-  else()
-    list(GET macro_args 0 target_name)
+  # === Argument validation === #
+  if(NOT target_name)
+    message(SEND_ERROR "target_name not specified for sl_create_bundle.")
   endif()
-  message("Generating Bundle header and linking to target: ${target_name}")
 
-  sl_generate_and_link_bundle_header(${target_name})
+  if(NOT BUNDLE_BUNDLE_NAME)
+    message(STATUS "BUNDLE_NAME not specified for target [" ${target_name} "], defaulting to target name.")
+    set(BUNDLE_BUNDLE_NAME ${target_name})
+  endif()
 
-  set_property(TARGET ${target_name} APPEND PROPERTY COMPILE_DEFINITIONS US_BUNDLE_NAME=${PROJECT_NAME})
+  if(BUNDLE_LIBRARY AND BUNDLE_EXECUTABLE)
+    message(SEND_ERROR "Both LIBRARY and EXECUTABLE options specified for [" ${target_name} "].")
+  endif()
+  if(NOT BUNDLE_LIBRARY AND NOT BUNDLE_EXECUTABLE)
+    # Default to library
+    set(BUNDLE_LIBRARY 1)
+  endif()
+  if(BUNDLE_EXECUTABLE AND NOT BUNDLE_BUNDLE_NAME STREQUAL "main")
+    message(SEND_ERROR "CppMicroServices EXECUTABLE bundles must use 'main' for their BUNDLE_NAME. Currently ["
+                       ${BUNDLE_BUNDLE_NAME} "] is specified.")
+  endif()
+
+  # === Set target properties and compile definitions === #
+  set(srcs ${BUNDLE_SOURCES})
+  usFunctionGenerateBundleInit(srcs)
+  usFunctionGetResourceSource(TARGET ${target_name} OUT srcs)
+
+  if(BUNDLE_LIBRARY)
+    add_library(${target_name} ${srcs})
+  else()
+    add_executable(${target_name} ${srcs})
+  endif()
+
+  # necessary for adding / embedding resources
+  set_property(TARGET ${target_name} PROPERTY US_BUNDLE_NAME ${BUNDLE_BUNDLE_NAME})
+  set_property(TARGET ${target_name} APPEND PROPERTY COMPILE_DEFINITIONS US_BUNDLE_NAME=${BUNDLE_BUNDLE_NAME})
+
+  activate_cpp11(${target_name})
+
+  # Add bundle resources
+  usFunctionAddResources(TARGET ${target_name}
+                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources
+                         FILES ${BUNDLE_RESOURCES} ${BUNDLE_BINARY_RESOURCES}
+                         ZIP_ARCHIVES ${BUNDLE_ZIP_ARCHIVES}
+                         COMPRESSION_LEVEL ${BUNDLE_COMPRESSION_LEVEL})
+  usFunctionEmbedResources(TARGET ${target_name} COMPRESSION_LEVEL ${BUNDLE_COMPRESSION_LEVEL})
 
   # Indicate this is a static module if we aren't building shared libraries
   if(NOT BUILD_SHARED_LIBS)
@@ -34,9 +97,7 @@ endfunction()
 #======================================================================================================================#
 # [PUBLIC/USER]
 #
-# sl_include_tests(testTarget1
-#                  testTarget2
-#                  ...)
+# sl_include_tests()
 #
 # Includes the "test" directory if it exists
 #
@@ -44,21 +105,28 @@ endfunction()
 function(SL_INCLUDE_TESTS )
   set(TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test")
   if(EXISTS ${TEST_DIR} AND IS_DIRECTORY ${TEST_DIR})
-
-    foreach(TEST_TARGET ${ARGN})
-      # Need to tell GTest not to use std::tuple because CppMicroServices uses its own definition, and it causes a
-      # redefinition error
-      target_compile_definitions(${TEST_TARGET} PRIVATE GTEST_HAS_TR1_TUPLE=1 GTEST_USE_OWN_TR1_TUPLE=0)
-    endforeach()
-
     add_subdirectory(test)
   endif()
 endfunction()
 
 #======================================================================================================================#
-# [PRIVATE/INTERNAL]
+# [PUBLIC/USER]
 #
-# sl_generate_and_link_bundle_header(target_name)
+# sl_disable_gtest_tuple(testTarget1 testTarget2 ...)
+#
+# Tell GTest not to use std::tuple because CppMicroServices uses its own definition, and it causes a redefinition error
+#
+#======================================================================================================================#
+function(SL_DISABLE_GTEST_TUPLE)
+  foreach(TEST_TARGET ${ARGN})
+    target_compile_definitions(${TEST_TARGET} PRIVATE GTEST_HAS_TR1_TUPLE=1 GTEST_USE_OWN_TR1_TUPLE=0)
+  endforeach()
+endfunction()
+
+#======================================================================================================================#
+# [PUBLIC/USER]
+#
+# sl_generate_and_link_bundle_header(target1 target2 ...)
 #
 # Generates a "Bundle.h" header file that contains the c++ library export definition.
 #
@@ -67,7 +135,7 @@ endfunction()
 # - the bundle namespace is sl::core::application
 #
 #======================================================================================================================#
-function(SL_GENERATE_AND_LINK_BUNDLE_HEADER target_name)
+function(SL_GENERATE_AND_LINK_BUNDLE_HEADER)
   string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UPPER) # used in Bundle.h.in
   string(REGEX MATCHALL "([^_]+)+" PROJECT_NAME_SEGMENTS ${PROJECT_NAME})
 
@@ -86,7 +154,9 @@ function(SL_GENERATE_AND_LINK_BUNDLE_HEADER target_name)
   set(SL_BUNDLE_HEADER_TARGET "${PROJECT_NAME}_BUNDLE_HEADER")
   add_custom_target(${SL_BUNDLE_HEADER_TARGET} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/Bundle.h)
 
-  # Add the bundle header target as a dependency of the specified target
-  add_dependencies(${target_name} ${SL_BUNDLE_HEADER_TARGET})
-  target_include_directories(${target_name} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+  # Add the bundle header target as a dependency of the specified targets
+  foreach(target_name ${ARGN})
+    add_dependencies(${target_name} ${SL_BUNDLE_HEADER_TARGET})
+    target_include_directories(${target_name} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+  endforeach()
 endfunction()
