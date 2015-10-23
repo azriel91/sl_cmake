@@ -3,7 +3,7 @@ from conans import *
 class SlCmakeConan(ConanFile):
     name = 'sl_cmake'
     version = '0.1.0'
-    exports = ['slBundleFunctions.cmake']
+    exports = ['slBundleFunctions.cmake', 'Bundle.h.in']
 
     def package(self):
         self.copy('slBundleFunctions.cmake', dst='.', src='.')
