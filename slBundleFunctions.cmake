@@ -36,9 +36,9 @@ find_package(CppMicroServices 2.99.0 CONFIG)
 #
 #======================================================================================================================#
 function(SL_CREATE_BUNDLE target_name)
-  cmake_parse_arguments(BUNDLE "LIBRARY;EXECUTABLE"
-                               "BUNDLE_NAME;SOURCES"
-                               "RESOURCES;BINARY_RESOURCES;ZIP_ARCHIVES;COMPRESSION_LEVEL"
+  cmake_parse_arguments(BUNDLE "LIBRARY;EXECUTABLE" # options
+                               "BUNDLE_NAME;COMPRESSION_LEVEL" # single-value args
+                               "SOURCES;RESOURCES;BINARY_RESOURCES;ZIP_ARCHIVES" # multi-value args
                                ${ARGN})
 
   # === Argument validation === #
@@ -92,6 +92,33 @@ function(SL_CREATE_BUNDLE target_name)
   if(NOT BUILD_SHARED_LIBS)
     target_compile_definitions(${target_name} PRIVATE US_STATIC_BUNDLE)
   endif()
+endfunction()
+
+#======================================================================================================================#
+# [PUBLIC/USER]
+#
+# sl_find_static_lib_paths(static_lib_paths lib1 lib2)
+#
+# Includes the "test" directory if it exists
+#
+#======================================================================================================================#
+function(SL_FIND_STATIC_LIB_PATHS out_var)
+  set(lib_paths)
+  foreach(library_name ${ARGN})
+    set(library_file_name ${CMAKE_STATIC_LIBRARY_PREFIX}${library_name}${CMAKE_STATIC_LIBRARY_SUFFIX})
+
+    # find_path finds the path of the directory that the file exists in
+    find_path(${library_file_name}_dir ${library_file_name}
+              PATHS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+              PATH_SUFFIXES "lib" "bin")
+    if(NOT ${library_file_name}_dir)
+      message(SEND_ERROR "Could not find " ${library_file_name})
+    endif()
+
+    list(APPEND lib_paths "${${library_file_name}_dir}/${library_file_name}")
+  endforeach()
+
+  set(${out_var} ${lib_paths} PARENT_SCOPE)
 endfunction()
 
 #======================================================================================================================#
