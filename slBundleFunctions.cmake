@@ -156,6 +156,7 @@ endfunction()
 # sl_generate_and_include_test_header(infile target1 target2 ...)
 #
 # Generates the test configuration header, and adds a dependency on the generated header to the specified targets.
+# This automatically calls sl_generate_and_include_test_config to include the standard test config header.
 #
 #======================================================================================================================#
 function(SL_GENERATE_AND_INCLUDE_TEST_HEADER TEST_HEADER_IN)
@@ -175,6 +176,38 @@ function(SL_GENERATE_AND_INCLUDE_TEST_HEADER TEST_HEADER_IN)
   # Add the test header target as a dependency of the specified targets
   foreach(TARGET_NAME ${ARGN})
     add_dependencies(${TARGET_NAME} ${GENERATED_TEST_HEADER_TARGET})
+    target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+  endforeach()
+
+  sl_generate_and_include_test_config(${ARGN})
+endfunction()
+
+#======================================================================================================================#
+# [PUBLIC/USER]
+#
+# sl_generate_and_include_test_config(target1 target2 ...)
+#
+# Generates SlTestConfig.h and makes the specified targets dependent on the generated file.
+# Source files of the targets should #include "SlTestConfig.h".
+#
+#======================================================================================================================#
+function(SL_GENERATE_AND_INCLUDE_TEST_CONFIG )
+  if(WIN32)
+    string(REPLACE "/" "\\\\" CMAKE_CURRENT_BINARY_DIR_NATIVE ${CMAKE_CURRENT_BINARY_DIR})
+    string(REPLACE "/" "\\\\" CMAKE_RUNTIME_OUTPUT_DIRECTORY_NATIVE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+  else()
+    set(CMAKE_CURRENT_BINARY_DIR_NATIVE ${CMAKE_CURRENT_BINARY_DIR})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_NATIVE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+  endif()
+
+  configure_file(${SL_BUNDLE_FUNCTIONS_DIR}/SlTestConfig.h.in
+                 ${CMAKE_CURRENT_BINARY_DIR}/SlTestConfig.h)
+  set(SL_TEST_CONFIG_TARGET "${PROJECT_NAME}_test_config")
+  add_custom_target(${SL_TEST_CONFIG_TARGET} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/SlTestConfig.h)
+
+  # Add the bundle header target as a dependency of the specified targets
+  foreach(TARGET_NAME ${ARGN})
+    add_dependencies(${TARGET_NAME} ${SL_TEST_CONFIG_TARGET})
     target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
   endforeach()
 endfunction()

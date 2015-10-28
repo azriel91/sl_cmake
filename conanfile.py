@@ -5,7 +5,7 @@ class SlCmakeConan(ConanFile):
     version = '0.1.0'
     generators = ['cmake']
     url = 'https://github.com/azriel91/sl_cmake.git'
-    exports = ['slBundleFunctions.cmake', 'Bundle.h.in']
+    exports = ['slBundleFunctions.cmake', 'Bundle.h.in', 'SlTestConfig.h.in']
 
     def requirements(self):
         self.requires('conan_cmake/0.1.0@azriel91/stable')
@@ -14,6 +14,7 @@ class SlCmakeConan(ConanFile):
     def package(self):
         self.copy('slBundleFunctions.cmake', dst='.', src='.')
         self.copy('Bundle.h.in', dst='.', src='.')
+        self.copy('SlTestConfig.h.in', dst='.', src='.')
 
     def build(self):
         # Nothing to do
