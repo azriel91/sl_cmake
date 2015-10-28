@@ -212,6 +212,30 @@ endfunction()
 #
 #======================================================================================================================#
 function(SL_GENERATE_AND_INCLUDE_TEST_CONFIG )
+  sl_generate_and_include_custom_header(${SL_BUNDLE_FUNCTIONS_DIR}/SlTestConfig.h.in
+                                        ${ARGN})
+endfunction()
+
+#======================================================================================================================#
+# [PUBLIC/USER]
+#
+# sl_generate_and_include_custom_header(MyHeader.h.in
+#                                       target1 target2 ...)
+#
+# Generates the custom header file and makes the specified targets dependent on the generated file.
+#
+# The input file must end with a ".in" suffix.
+# If the input file is an absolute path, it will be taken as is.
+# If the input file is a relative path, it will be taken as coming from ${CMAKE_CURRENT_SOURCE_DIR}.
+#
+# The output file will be written to ${CMAKE_CURRENT_BINARY_DIR}, named the same as the input file without the ".in"
+# suffix. For example:
+#
+# in_file:  "/path/to/MyHeader.h.in"
+# out_file: "${CMAKE_CURRENT_BINARY_DIR}/MyHeader.h"
+#
+#======================================================================================================================#
+function(SL_GENERATE_AND_INCLUDE_CUSTOM_HEADER IN_FILE)
   if(WIN32)
     string(REPLACE "/" "\\\\" CMAKE_CURRENT_BINARY_DIR_NATIVE ${CMAKE_CURRENT_BINARY_DIR})
     string(REPLACE "/" "\\\\" CMAKE_RUNTIME_OUTPUT_DIRECTORY_NATIVE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
@@ -220,14 +244,29 @@ function(SL_GENERATE_AND_INCLUDE_TEST_CONFIG )
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_NATIVE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
   endif()
 
-  configure_file(${SL_BUNDLE_FUNCTIONS_DIR}/SlTestConfig.h.in
-                 ${CMAKE_CURRENT_BINARY_DIR}/SlTestConfig.h)
-  set(SL_TEST_CONFIG_TARGET "${PROJECT_NAME}_test_config")
-  add_custom_target(${SL_TEST_CONFIG_TARGET} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/SlTestConfig.h)
+  # Get the absolute path of the input file
+  if(IS_ABSOLUTE ${IN_FILE})
+    set(IN_FILE_ABSOLUTE ${IN_FILE})
+  else()
+    set(IN_FILE_ABSOLUTE "${CMAKE_CURRENT_SOURCE_DIR}/${IN_FILE}")
+  endif()
+
+  # Calculate the output file name
+  # OUT_FILE = ${CMAKE_CURRENT_BINARY_DIR} + "/" + basename(IN_FILE_ABSOLUTE).replaceAtEnd(".in", "")
+  string(REGEX MATCH "[^/]+$" IN_FILE_BASE_NAME ${IN_FILE_ABSOLUTE})
+  string(REGEX REPLACE "[.]in$" "" OUT_FILE_BASE_NAME ${IN_FILE_BASE_NAME})
+  set(OUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${OUT_FILE_BASE_NAME}")
+
+  configure_file(${IN_FILE_ABSOLUTE} ${OUT_FILE})
+
+  # Guard against file names containing spaces, dots, underscores, and hyphens for the output file target
+  string(REGEX REPLACE "[.	 -]" "_" OUT_FILE_UNDERSCORES ${OUT_FILE_BASE_NAME})
+  set(SL_CUSTOM_HEADER_TARGET "${OUT_FILE_UNDERSCORES}_config_file")
+  add_custom_target(${SL_CUSTOM_HEADER_TARGET} DEPENDS ${OUT_FILE})
 
   # Add the bundle header target as a dependency of the specified targets
   foreach(TARGET_NAME ${ARGN})
-    add_dependencies(${TARGET_NAME} ${SL_TEST_CONFIG_TARGET})
+    add_dependencies(${TARGET_NAME} ${SL_CUSTOM_HEADER_TARGET})
     target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
   endforeach()
 endfunction()
