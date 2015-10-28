@@ -185,6 +185,26 @@ endfunction()
 #======================================================================================================================#
 # [PUBLIC/USER]
 #
+# sl_include_tests(target1 target2 ...)
+#
+# Should be called from the "<project_dir>/test" directory
+# Disables the GTest tuple and generates and includes the test config header (SlTestConfig.h).
+#
+#======================================================================================================================#
+function(SL_INCLUDE_TESTS)
+  sl_generate_and_include_test_config(${ARGN})
+  sl_disable_gtest_tuple(${ARGN})
+
+  enable_testing()
+  foreach(target_name ${ARGN})
+    add_test(NAME ${target_name}
+             COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target_name})
+  endforeach()
+endfunction()
+
+#======================================================================================================================#
+# [PUBLIC/USER]
+#
 # sl_generate_and_include_test_config(target1 target2 ...)
 #
 # Generates SlTestConfig.h and makes the specified targets dependent on the generated file.
