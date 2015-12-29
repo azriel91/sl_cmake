@@ -9,6 +9,7 @@ install:
 - sudo mkdir /usr/lib/cmake
 - sudo /tmp/cmake-3.4.1-Linux-x86_64.sh --skip-license --include-subdir --prefix=/usr/lib/cmake
 - sudo update-alternatives --install /usr/bin/cmake cmake /usr/lib/cmake/cmake-3.4.1-Linux-x86_64/bin/cmake 100
+- export PATH=/usr/lib/cmake/cmake-3.4.1-Linux-x86_64/bin:$PATH
 
 script:
 - conan install --build=missing
