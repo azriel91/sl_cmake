@@ -6,7 +6,7 @@ class SlCmakeConan(ConanFile):
     exports = ['slBundleFunctions.cmake', 'Bundle.h.in']
 
     def requirements(self):
-        self.requires('conan_cmake/0.1.0@azriel91/testing')
+        self.requires('conan_cmake/0.1.0@azriel91/stable')
         self.requires('CppMicroServices/3.0.0@azriel91/testing')
 
     def package(self):
