@@ -1,11 +1,15 @@
 sudo: required
 
-before_install:
-- git checkout $TRAVIS_BRANCH
+install:
+- sudo pip install conan
 
-env:
-  global:
-  - USER_EMAIL=azriel91@gmail.com
-  - USER_NAME="azriel"
-  # GITHUB_TOKEN
-  - secure: "itp+3LkvSipkqFySYOKhp+iiORTsr2W4/M8DDoyGLUdLMtGuSfWhjCdTcVYFMXBd5S0kB2YmZGpxBED1cNJ2bZwgQ33NamBs5ikeRIIInJSa64G/ArVqiIsY2sa5/tQyJwRYLykU+Xc87B0JO/VJtnMZvcscBWqyw+IAfbV9wDex+rZwiuCePTTUTRTJgZWZEKPR7NN1ZypQWbFCYp6x57MSeEeTzJVL7RnwNaJj+zh9Q9yYo/vz/bxjYgJ2rG1D9asV15tYlDSxKedM7jnjCrtiJmdb8BpZV3mwqwLpH6gk2ekCRW6R8SnyAIr4RSaojmvCyORk2zZrfcWmNDYrQXTJxgj7h9g8XcclZSF7koVQMkMslMBkG5D7lBKMPFYuzk6tQLb5aQmj0Lhr6d/yAj/KFKw8hI5J642HG/2QmADTxvZPQmmwo0F++Bs3HjAjizfRLFo5H8BQFhYqkxM4L5PS9ZfjpdA8fT57A1HbROWZS8H8q+opptpFzq30jhTTjLF2Os3nXaEBU9Md/Ed8JIkJUmEv+xOmny6smzutHLSfpVrcv0iKUtgaYhSLyzn2KnQoWPOZRiprZERxZYuXvt+iPMNAe+2RDTQppW4wtIfMgNm9mWm3xY/VOkL/iGYTTg5GA0FCm57XIzUtgqffhxNuIp6vPg85ChH4e+Hy+qg="
+# install cmake 3.4
+- wget --no-check-certificate https://cmake.org/files/v3.4/cmake-3.4.1-Linux-x86_64.sh -O /tmp/cmake-3.4.1-Linux-x86_64.sh
+- chmod +x /tmp/cmake-3.4.1-Linux-x86_64.sh
+- sudo mkdir /usr/lib/cmake
+- sudo /tmp/cmake-3.4.1-Linux-x86_64.sh --skip-license --include-subdir --prefix=/usr/lib/cmake
+- sudo update-alternatives --install /usr/bin/cmake cmake /usr/lib/cmake/cmake-3.4.1-Linux-x86_64/bin/cmake 100
+
+script:
+- conan install --build=missing
+- conan build
