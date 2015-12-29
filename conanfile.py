@@ -12,3 +12,7 @@ class SlCmakeConan(ConanFile):
     def package(self):
         self.copy('slBundleFunctions.cmake', dst='.', src='.')
         self.copy('Bundle.h.in', dst='.', src='.')
+
+    def build(self):
+        # Nothing to do
+        pass
