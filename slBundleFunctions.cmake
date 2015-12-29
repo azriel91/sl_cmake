@@ -2,15 +2,9 @@ set(SL_BUNDLE_FUNCTIONS_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 # === Dependency discovery === #
 
-# Detect conan_cmake directory based on a file we expect to exist
-find_path(conan_cmake_DIR "conanTools.cmake" PATHS ${CONAN_INCLUDE_DIRS})
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${conan_cmake_DIR})
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CONAN_CONAN_CMAKE_ROOT} ${CONAN_CPPMICROSERVICES_ROOT})
 include(conanTools)
-
-# Detect CppMicroServices directory based on a file we expect to exist
-find_path(CppMicroServices_CONAN_DIR "CppMicroServicesConfig.cmake" PATHS ${CONAN_INCLUDE_DIRS})
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CppMicroServices_CONAN_DIR})
-find_package(CppMicroServices 2.99.0 CONFIG)
+find_package(CppMicroServices 3.0.0 CONFIG)
 
 #======================================================================================================================#
 # [PUBLIC/USER]
@@ -124,16 +118,33 @@ endfunction()
 #======================================================================================================================#
 # [PUBLIC/USER]
 #
-# sl_include_tests()
+# sl_include_test_dir()
+#
+# Includes the "test" directory if it exists
+#
+#======================================================================================================================#
+function(SL_INCLUDE_TEST_DIR )
+  set(TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test")
+  if(EXISTS ${TEST_DIR} AND IS_DIRECTORY ${TEST_DIR})
+    add_subdirectory(test)
+  endif()
+endfunction()
+
+#======================================================================================================================#
+# [PUBLIC/USER]
+#
+# sl_include_tests(target1 target2 ...)
 #
 # Includes the "test" directory if it exists
 #
 #======================================================================================================================#
 function(SL_INCLUDE_TESTS )
-  set(TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test")
-  if(EXISTS ${TEST_DIR} AND IS_DIRECTORY ${TEST_DIR})
-    add_subdirectory(test)
-  endif()
+  enable_testing()
+
+  foreach(target_name ${ARGN})
+    add_test(NAME ${target_name}
+             COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target_name})
+  endforeach()
 endfunction()
 
 #======================================================================================================================#
@@ -153,7 +164,7 @@ endfunction()
 #======================================================================================================================#
 # [PUBLIC/USER]
 #
-# sl_generate_and_link_bundle_header(target1 target2 ...)
+# sl_generate_and_include_bundle_header(target1 target2 ...)
 #
 # Generates a "Bundle.h" header file that contains the c++ library export definition.
 #
@@ -162,7 +173,7 @@ endfunction()
 # - the bundle namespace is sl::core::application
 #
 #======================================================================================================================#
-function(SL_GENERATE_AND_LINK_BUNDLE_HEADER)
+function(SL_GENERATE_AND_INCLUDE_BUNDLE_HEADER)
   string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UPPER) # used in Bundle.h.in
   string(REGEX MATCHALL "([^_]+)+" PROJECT_NAME_SEGMENTS ${PROJECT_NAME})
 
