@@ -6,7 +6,7 @@ include(conanbuildinfo.cmake)
 conan_basic_setup()
 
 include(conanTools)
-find_package(CppMicroServices 3.0.0 CONFIG)
+find_package(CppMicroServices 3.0.0 CONFIG PATHS ${CONAN_CPPMICROSERVICES_ROOT})
 
 #======================================================================================================================#
 # [PUBLIC/USER]
@@ -95,7 +95,7 @@ endfunction()
 #
 # sl_find_static_lib_paths(static_lib_paths lib1 lib2)
 #
-# Includes the "test" directory if it exists
+# Searches the CMAKE_RUNTIME_OUTPUT_DIRECTORY and CONAN_LIB_DIRS for the specified static libraries.
 #
 #======================================================================================================================#
 function(SL_FIND_STATIC_LIB_PATHS out_var)
@@ -105,7 +105,7 @@ function(SL_FIND_STATIC_LIB_PATHS out_var)
 
     # find_path finds the path of the directory that the file exists in
     find_path(${library_file_name}_dir ${library_file_name}
-              PATHS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+              PATHS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${CONAN_LIB_DIRS}
               PATH_SUFFIXES "lib" "bin")
     if(NOT ${library_file_name}_dir)
       message(SEND_ERROR "Could not find " ${library_file_name})
@@ -137,7 +137,7 @@ endfunction()
 #
 # sl_include_tests(target1 target2 ...)
 #
-# Includes the "test" directory if it exists
+# Enables testing, and calls add_test for each of the specified targets.
 #
 #======================================================================================================================#
 function(SL_INCLUDE_TESTS )
