@@ -3,6 +3,8 @@ from conans import *
 class SlCmakeConan(ConanFile):
     name = 'sl_cmake'
     version = '0.1.0'
+    generators = ['cmake']
+    url = 'https://github.com/azriel91/sl_cmake.git'
     exports = ['slBundleFunctions.cmake', 'Bundle.h.in']
 
     def requirements(self):
