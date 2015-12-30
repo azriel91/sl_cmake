@@ -1,16 +1,45 @@
-[![Build Status](https://travis-ci.org/azriel91/sl_cmake.svg?branch=master)](https://travis-ci.org/azriel91/sl_cmake) [![Build Status](https://webapi.biicode.com/v1/badges/azriel/azriel/sl_cmake/master)](https://www.biicode.com/azriel/sl_cmake)
+# sl_cmake
 
-## CMake Functions To Develop CppMicroServices Modules with Biicode
+[![Build Status](https://travis-ci.org/azriel91/sl_cmake.svg?branch=master)](https://travis-ci.org/azriel91/sl_cmake)
 
-You can include this file in your CmakeLists.txt file for your biicode project:
+CMake Functions To Develop CppMicroServices Bundles with Conan
 
-    include(azriel/sl_cmake/slBlockFunctions)
+## Usage
 
-Then use "bii find" command to download it:
+1. Declare the dependency.
 
-    > bii find
+    If you are using `conanfile.txt`:
+    ```
+    [requires]
+    sl_cmake/0.1.0@azriel91/testing
+    ```
 
-Now you can use directly the functions defined in slBlockFunctions.cmake:
+    If you are using `conanfile.py`:
 
-    ADAPT_TARGETS_FOR_CPPMICROSERVICES()
-    SL_INCLUDE_TESTS(${BII_test_main_TARGET})
+    ```python
+    from conans import *
+
+    class MyProjectConan(ConanFile):
+        # Either:
+        requires = 'sl_cmake/0.1.0@azriel91/testing'
+        # Or:
+        def requirements(self):
+            self.requires('sl_cmake/0.1.0@azriel91/testing')
+
+        # ...
+    ```
+
+2. In your project's `CMakeLists.txt`, include conan definitions, slBundleFunctions, and start working:
+
+    ```cmake
+    include(conanbuildinfo.cmake)
+    conan_basic_setup()
+
+    include(slBundleFunctions)
+    ```
+
+    Now you can use directly the functions defined in slBlockFunctions.cmake:
+
+    ```cmake
+    sl_include_test_dir() # includes the `test` subdirectory if it exists
+    ```
