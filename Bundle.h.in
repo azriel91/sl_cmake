@@ -18,21 +18,21 @@
 
 =============================================================================*/
 
-#ifndef __@BII_BLOCK_NAME_UPPER@__BLOCK_H
-#define __@BII_BLOCK_NAME_UPPER@__BLOCK_H
+#ifndef __@PROJECT_NAME_UPPER@__BUNDLE_H
+#define __@PROJECT_NAME_UPPER@__BUNDLE_H
 
 #include <usGlobalConfig.h>
 
 #ifdef BUILD_SHARED_LIBS
-	#ifdef @BII_BLOCK_USER@_@BII_BLOCK_NAME@_EXPORTS
-		#define @BII_BLOCK_NAME_UPPER@_EXPORT US_ABI_EXPORT
+	#ifdef @PROJECT_NAME@_EXPORTS
+		#define @PROJECT_NAME_UPPER@_EXPORT US_ABI_EXPORT
 	#else
-		#define @BII_BLOCK_NAME_UPPER@_EXPORT US_ABI_IMPORT
+		#define @PROJECT_NAME_UPPER@_EXPORT US_ABI_IMPORT
 	#endif
 #else
-#define @BII_BLOCK_NAME_UPPER@_EXPORT US_ABI_EXPORT
+#define @PROJECT_NAME_UPPER@_EXPORT US_ABI_EXPORT
 #endif
 
-@BLOCK_NAMESPACE_DECLARATION@
+@BUNDLE_NAMESPACE_DECLARATION@
 
-#endif /* __@BII_BLOCK_NAME_UPPER@__BLOCK_H */
+#endif /* __@PROJECT_NAME_UPPER@__BUNDLE_H */

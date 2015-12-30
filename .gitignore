@@ -1,3 +1,5 @@
-# biicode simple layout directories
-/bii
-/bin
+/build
+/conanfile.pyc
+/conaninfo.txt
+/conanbuildinfo.txt
+/conanbuildinfo.cmake
