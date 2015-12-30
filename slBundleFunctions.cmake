@@ -31,24 +31,24 @@ find_package(CppMicroServices 3.0.0 CONFIG PATHS ${CONAN_CPPMICROSERVICES_ROOT})
 # Sets the c++11 flag for the compiler.
 #
 #======================================================================================================================#
-function(SL_CREATE_BUNDLE target_name)
+function(SL_CREATE_BUNDLE TARGET_NAME)
   cmake_parse_arguments(BUNDLE "LIBRARY;EXECUTABLE" # options
                                "BUNDLE_NAME;COMPRESSION_LEVEL" # single-value args
                                "SOURCES;RESOURCES;BINARY_RESOURCES;ZIP_ARCHIVES" # multi-value args
                                ${ARGN})
 
   # === Argument validation === #
-  if(NOT target_name)
-    message(SEND_ERROR "target_name not specified for sl_create_bundle.")
+  if(NOT TARGET_NAME)
+    message(SEND_ERROR "TARGET_NAME not specified for sl_create_bundle.")
   endif()
 
   if(NOT BUNDLE_BUNDLE_NAME)
-    message(STATUS "BUNDLE_NAME not specified for target [" ${target_name} "], defaulting to target name.")
-    set(BUNDLE_BUNDLE_NAME ${target_name})
+    message(STATUS "BUNDLE_NAME not specified for target [" ${TARGET_NAME} "], defaulting to target name.")
+    set(BUNDLE_BUNDLE_NAME ${TARGET_NAME})
   endif()
 
   if(BUNDLE_LIBRARY AND BUNDLE_EXECUTABLE)
-    message(SEND_ERROR "Both LIBRARY and EXECUTABLE options specified for [" ${target_name} "].")
+    message(SEND_ERROR "Both LIBRARY and EXECUTABLE options specified for [" ${TARGET_NAME} "].")
   endif()
   if(NOT BUNDLE_LIBRARY AND NOT BUNDLE_EXECUTABLE)
     # Default to library
@@ -62,31 +62,31 @@ function(SL_CREATE_BUNDLE target_name)
   # === Set target properties and compile definitions === #
   set(srcs ${BUNDLE_SOURCES})
   usFunctionGenerateBundleInit(srcs)
-  usFunctionGetResourceSource(TARGET ${target_name} OUT srcs)
+  usFunctionGetResourceSource(TARGET ${TARGET_NAME} OUT srcs)
 
   if(BUNDLE_LIBRARY)
-    add_library(${target_name} ${srcs})
+    add_library(${TARGET_NAME} ${srcs})
   else()
-    add_executable(${target_name} ${srcs})
+    add_executable(${TARGET_NAME} ${srcs})
   endif()
 
   # necessary for adding / embedding resources
-  set_property(TARGET ${target_name} PROPERTY US_BUNDLE_NAME ${BUNDLE_BUNDLE_NAME})
-  set_property(TARGET ${target_name} APPEND PROPERTY COMPILE_DEFINITIONS US_BUNDLE_NAME=${BUNDLE_BUNDLE_NAME})
+  set_property(TARGET ${TARGET_NAME} PROPERTY US_BUNDLE_NAME ${BUNDLE_BUNDLE_NAME})
+  set_property(TARGET ${TARGET_NAME} APPEND PROPERTY COMPILE_DEFINITIONS US_BUNDLE_NAME=${BUNDLE_BUNDLE_NAME})
 
-  activate_cpp11(${target_name})
+  activate_cpp11(${TARGET_NAME})
 
   # Add bundle resources
-  usFunctionAddResources(TARGET ${target_name}
+  usFunctionAddResources(TARGET ${TARGET_NAME}
                          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources
                          FILES ${BUNDLE_RESOURCES} ${BUNDLE_BINARY_RESOURCES}
                          ZIP_ARCHIVES ${BUNDLE_ZIP_ARCHIVES}
                          COMPRESSION_LEVEL ${BUNDLE_COMPRESSION_LEVEL})
-  usFunctionEmbedResources(TARGET ${target_name} COMPRESSION_LEVEL ${BUNDLE_COMPRESSION_LEVEL})
+  usFunctionEmbedResources(TARGET ${TARGET_NAME} COMPRESSION_LEVEL ${BUNDLE_COMPRESSION_LEVEL})
 
   # Indicate this is a static module if we aren't building shared libraries
   if(NOT BUILD_SHARED_LIBS)
-    target_compile_definitions(${target_name} PRIVATE US_STATIC_BUNDLE)
+    target_compile_definitions(${TARGET_NAME} PRIVATE US_STATIC_BUNDLE)
   endif()
 endfunction()
 
@@ -143,9 +143,38 @@ endfunction()
 function(SL_INCLUDE_TESTS )
   enable_testing()
 
-  foreach(target_name ${ARGN})
-    add_test(NAME ${target_name}
-             COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target_name})
+  foreach(TARGET_NAME ${ARGN})
+    add_test(NAME ${TARGET_NAME}
+             COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${TARGET_NAME})
+  endforeach()
+endfunction()
+
+#======================================================================================================================#
+# [PUBLIC/USER]
+#
+# sl_generate_and_include_test_header(infile target1 target2 ...)
+#
+# Generates the test configuration header, and adds a dependency on the generated header to the specified targets.
+#
+#======================================================================================================================#
+function(SL_GENERATE_AND_INCLUDE_TEST_HEADER TEST_HEADER_IN)
+  # Strip off the ".in" from the infile
+  string(REGEX REPLACE
+         "(.+)[.]in$"          # regular_expression
+         "\\1"                 # replace_expression
+         GENERATED_TEST_HEADER # output variable
+         "${TEST_HEADER_IN}")
+
+  # Generate the header file
+  set(GENERATED_TEST_HEADER_TARGET "${TEST_HEADER_IN}_TARGET")
+  add_custom_target(${GENERATED_TEST_HEADER_TARGET} DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${GENERATED_TEST_HEADER}")
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${TEST_HEADER_IN}"
+                 "${CMAKE_CURRENT_BINARY_DIR}/${GENERATED_TEST_HEADER}")
+
+  # Add the test header target as a dependency of the specified targets
+  foreach(TARGET_NAME ${ARGN})
+    add_dependencies(${TARGET_NAME} ${GENERATED_TEST_HEADER_TARGET})
+    target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
   endforeach()
 endfunction()
 
@@ -195,8 +224,8 @@ function(SL_GENERATE_AND_INCLUDE_BUNDLE_HEADER)
   add_custom_target(${SL_BUNDLE_HEADER_TARGET} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/Bundle.h)
 
   # Add the bundle header target as a dependency of the specified targets
-  foreach(target_name ${ARGN})
-    add_dependencies(${target_name} ${SL_BUNDLE_HEADER_TARGET})
-    target_include_directories(${target_name} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+  foreach(TARGET_NAME ${ARGN})
+    add_dependencies(${TARGET_NAME} ${SL_BUNDLE_HEADER_TARGET})
+    target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
   endforeach()
 endfunction()
