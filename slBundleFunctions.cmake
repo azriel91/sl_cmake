@@ -2,7 +2,9 @@ set(SL_BUNDLE_FUNCTIONS_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 # === Dependency discovery === #
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CONAN_CONAN_CMAKE_ROOT} ${CONAN_CPPMICROSERVICES_ROOT})
+include(conanbuildinfo.cmake)
+conan_basic_setup()
+
 include(conanTools)
 find_package(CppMicroServices 3.0.0 CONFIG)
 
