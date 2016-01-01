@@ -124,8 +124,11 @@ endfunction()
 #
 # Includes the "test" directory if it exists
 #
+# The enable_testing() call must be done in the project's root directory rather than through a function otherwise the
+# 'test' target doesn't get generated. This is a quirk of CMake.
+#
 #======================================================================================================================#
-function(SL_INCLUDE_TEST_DIR )
+function(SL_INCLUDE_TEST_DIR)
   set(TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test")
   if(EXISTS ${TEST_DIR} AND IS_DIRECTORY ${TEST_DIR})
     add_subdirectory(test)
@@ -137,12 +140,10 @@ endfunction()
 #
 # sl_include_tests(target1 target2 ...)
 #
-# Enables testing, and calls add_test for each of the specified targets.
+# Calls add_test for each of the specified targets.
 #
 #======================================================================================================================#
 function(SL_INCLUDE_TESTS )
-  enable_testing()
-
   foreach(TARGET_NAME ${ARGN})
     add_test(NAME ${TARGET_NAME}
              COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${TARGET_NAME})
