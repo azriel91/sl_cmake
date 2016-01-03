@@ -153,38 +153,6 @@ endfunction()
 #======================================================================================================================#
 # [PUBLIC/USER]
 #
-# sl_generate_and_include_test_header(infile target1 target2 ...)
-#
-# Generates the test configuration header, and adds a dependency on the generated header to the specified targets.
-# This automatically calls sl_generate_and_include_test_config to include the standard test config header.
-#
-#======================================================================================================================#
-function(SL_GENERATE_AND_INCLUDE_TEST_HEADER TEST_HEADER_IN)
-  # Strip off the ".in" from the infile
-  string(REGEX REPLACE
-         "(.+)[.]in$"          # regular_expression
-         "\\1"                 # replace_expression
-         GENERATED_TEST_HEADER # output variable
-         "${TEST_HEADER_IN}")
-
-  # Generate the header file
-  set(GENERATED_TEST_HEADER_TARGET "${TEST_HEADER_IN}_TARGET")
-  add_custom_target(${GENERATED_TEST_HEADER_TARGET} DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${GENERATED_TEST_HEADER}")
-  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${TEST_HEADER_IN}"
-                 "${CMAKE_CURRENT_BINARY_DIR}/${GENERATED_TEST_HEADER}")
-
-  # Add the test header target as a dependency of the specified targets
-  foreach(TARGET_NAME ${ARGN})
-    add_dependencies(${TARGET_NAME} ${GENERATED_TEST_HEADER_TARGET})
-    target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
-  endforeach()
-
-  sl_generate_and_include_test_config(${ARGN})
-endfunction()
-
-#======================================================================================================================#
-# [PUBLIC/USER]
-#
 # sl_include_tests(target1 target2 ...)
 #
 # Should be called from the "<project_dir>/test" directory
